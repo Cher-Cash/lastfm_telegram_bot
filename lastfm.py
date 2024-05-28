@@ -1,14 +1,14 @@
 from xml.dom import minidom
-from urllib.request import urlopen
+
+import requests
 
 
 def get_song_from_api(username, api_key):
     currentTrackURL = (
         'http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&nowplaying=\"true\"&user={0}&api_key={1}&limit=1'.format(
             str(userName), str(api_key)))
-    print(currentTrackURL)
-    return urlopen(currentTrackURL).read()
-
+    result = requests.get(currentTrackURL)
+    return result.text
 
 def process_xml(data):
     document = minidom.parseString(data)
