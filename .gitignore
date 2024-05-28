@@ -1,3 +1,6 @@
 /todo.md
 .idea
 .venv
+/temp.txt
+/config.py
+venv/

@@ -22,9 +22,6 @@ def get_song_from_api(userName, api_key):
     return response.json()
 
 
-
-
-
 def process_json(document):
     current_track = document['recenttracks']['track'][0]
     song_name = current_track['name']
