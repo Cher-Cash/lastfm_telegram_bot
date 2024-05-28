@@ -2,20 +2,19 @@ from lastfm import check_for_new_song, process_json, get_song_from_api
 
 
 def safe_result(result_of_request):
-    file = open('temp.txt', 'w')
-    file.write(result_of_request)
-    file.close()
-    return
+    with open('temp.txt', 'w') as file:
+        file.write(result_of_request)
 
 
 def check_file(result_of_request):
-    file = open('temp.txt', 'r')
-    if result_of_request != file.read():
-        safe_result(result_of_request)
-        file.close()
-        return True
-    file.close()
+    with open('temp.txt', 'r') as file:
+        if result_of_request != file.read():
+            return True
     return False
+
+
+def send_message(song):
+    print('НАДО СЛАТЬ')
 
 
 def app():
@@ -23,10 +22,9 @@ def app():
     data_line = data['name'] + data['artist']
     if check_file(data_line):
         safe_result(data_line)
-        print('НАДО СЛАТЬ')
+        send_message(data_line)
         return
     print('ничего не шлем')
-    return
 
 
 if __name__ == "__main__":

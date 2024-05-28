@@ -1,5 +1,3 @@
-from xml.dom import minidom
-
 import requests
 
 
@@ -18,6 +16,7 @@ def get_song_from_api(userName, api_key):
 
     # Выполнение GET-запроса с параметрами
     response = requests.get(base_url, params=params)
+
     if response.status_code != 200:
         return None
     return response.json()
