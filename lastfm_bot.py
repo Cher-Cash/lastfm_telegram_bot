@@ -1,22 +1,7 @@
-import requests
-import os
+import requests, sqlite3, os, sys
 from lastfm import check_for_new_song
 from config import config
-
-
-def safe_result(result_of_request):
-    with open('temp.txt', 'w') as file:
-        file.write(result_of_request)
-
-
-def check_file(result_of_request):
-    if not os.path.isfile('temp.txt'):
-        file = open('temp.txt', 'w')
-        file.close()
-    with open('temp.txt', 'r') as file:
-        if result_of_request != file.read():
-            return True
-    return False
+from datetime import datetime
 
 
 def send_message(name, artist):
@@ -34,14 +19,54 @@ def send_message(name, artist):
     else:
         print('Ошибка отправки сообщения:', response.text)
 
+def write_db_user(username, lastfm, chatid):
+    print('write db user')
+    connection = sqlite3.connect('testdb.sqlite')
+    cursor = connection.cursor()
+    cursor.execute('INSERT INTO users (username, lastfm, chat_id) VALUES (?, ?, ?)', (username, lastfm, chatid))
+    connection.commit()
+    connection.close()
+    return
+
+
+
+def process(user):
+    print(user)
+    song_dict = check_for_new_song(user[2])
+    print(song_dict)
+    song = song_dict['name']
+    artist = song_dict['artist']
+    if song_dict['nowplaying']:
+        write_song(user, song, artist)
+        send_message(song, artist)
+def write_song(user, song, artist):
+    user_id = user[0]
+    connection = sqlite3.connect('testdb.sqlite')
+    cursor = connection.cursor()
+    created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    insert_query = "INSERT INTO played (song, artist, user_id, created_at) VALUES (?, ?, ?, ?)"
+    cursor.execute(insert_query, (song, artist, user_id, created_at))
+    connection.commit()
+    connection.close()
+
+def main_loop():
+    print('main loop')
+    conn = sqlite3.connect('testdb.sqlite')
+    cursor = conn.cursor()
+    query = "SELECT * FROM users"
+    cursor.execute(query)
+    users = cursor.fetchall()
+    for user in users:
+        process(user)
 
 def app():
-    data = check_for_new_song("gunlinux", "460cda35be2fbf4f28e8ea7a38580730")
-    data_line = data['name'] + data['artist']
-    if check_file(data_line):
-        safe_result(data_line)
-        send_message(data['name'], data['artist'])
+    if len(sys.argv) == 4:
+        username = sys.argv[1]
+        lastfm = sys.argv[2]
+        chat_id = sys.argv[3]
+        write_db_user(username, lastfm, chat_id)
         return
+    main_loop()
 
 
 if __name__ == "__main__":

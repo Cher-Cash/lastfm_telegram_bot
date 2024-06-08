@@ -4,3 +4,4 @@
 /temp.txt
 /config.py
 venv/
+/testdb.sqlite
