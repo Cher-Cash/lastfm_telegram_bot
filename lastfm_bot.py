@@ -1,4 +1,5 @@
 import requests
+import os
 from lastfm import check_for_new_song
 from config import config
 
@@ -9,6 +10,9 @@ def safe_result(result_of_request):
 
 
 def check_file(result_of_request):
+    if not os.path.isfile('temp.txt'):
+        file = open('temp.txt', 'w')
+        file.close()
     with open('temp.txt', 'r') as file:
         if result_of_request != file.read():
             return True
