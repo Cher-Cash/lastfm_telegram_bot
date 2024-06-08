@@ -20,7 +20,6 @@ def check_file(result_of_request):
 
 
 def send_message(name, artist):
-    print('НАДО СЛАТЬ')
     # Ваш токен бота
     TOKEN = config['token']
     url = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
@@ -43,7 +42,6 @@ def app():
         safe_result(data_line)
         send_message(data['name'], data['artist'])
         return
-    print('ничего не шлем')
 
 
 if __name__ == "__main__":
