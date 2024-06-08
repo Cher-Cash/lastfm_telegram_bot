@@ -36,9 +36,29 @@ def process(user):
     print(song_dict)
     song = song_dict['name']
     artist = song_dict['artist']
-    if song_dict['nowplaying']:
+    last_song = user_last_song(user[0])
+    if (song, artist) == last_song and song_dict['nowplaying']:
         write_song(user, song, artist)
         send_message(song, artist)
+
+
+
+def user_last_song(user_id):
+    connection = sqlite3.connect('testdb.sqlite')
+    cursor = connection.cursor()
+    get_last_song_query = """
+        SELECT song, artist
+        FROM played
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT 1;
+        """
+    cursor.execute(get_last_song_query, (user_id,))
+    last_song_result = cursor.fetchone()
+    connection.close()
+    return last_song_result
+
+
 def write_song(user, song, artist):
     user_id = user[0]
     connection = sqlite3.connect('testdb.sqlite')
