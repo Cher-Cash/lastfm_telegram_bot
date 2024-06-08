@@ -30,7 +30,7 @@ def send_message(name, artist):
     }
     response = requests.post(url, data=params)
     if response.status_code == 200:
-        print('Сообщение отправлено успешно')
+        print(f'{name} - {artist}')
     else:
         print('Ошибка отправки сообщения:', response.text)
 
