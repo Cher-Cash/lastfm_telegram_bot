@@ -4,11 +4,10 @@ from config import config
 from datetime import datetime
 
 
-def send_message(name, artist):
+def send_message(name, artist, chat_id):
     # Ваш токен бота
     TOKEN = config['token']
     url = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
-    chat_id = config['chat_id']
     params = {
         'chat_id': chat_id,
         'text': f'{name} - {artist}'
@@ -37,9 +36,10 @@ def process(user):
     song = song_dict['name']
     artist = song_dict['artist']
     last_song = user_last_song(user[0])
+    chat_id = user[3]
     if (song, artist) != last_song and song_dict['nowplaying']:
         write_song(user, song, artist)
-        send_message(song, artist)
+        send_message(song, artist, chat_id)
 
 
 
