@@ -37,7 +37,7 @@ def process(user):
     song = song_dict['name']
     artist = song_dict['artist']
     last_song = user_last_song(user[0])
-    if (song, artist) == last_song and song_dict['nowplaying']:
+    if (song, artist) != last_song and song_dict['nowplaying']:
         write_song(user, song, artist)
         send_message(song, artist)
 
