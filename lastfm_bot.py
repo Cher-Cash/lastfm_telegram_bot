@@ -6,6 +6,70 @@ from config import config
 from datetime import datetime
 
 
+class User:
+    def __init__(self, user, lastfm, chat_id, user_id=None):
+        self.user = user
+        self.lastfm = lastfm
+        self.chat_id = chat_id
+        self.user_id = user_id
+
+    def write_db_user(self):
+        with sqlite3.connect('testdb.sqlite') as connection:
+            cursor = connection.cursor()
+            cursor.execute('INSERT INTO users (username, lastfm, chat_id) VALUES (?, ?, ?)', (self.user, self.lastfm, self.chat_id))
+            connection.commit()
+        return
+
+    @staticmethod
+    def get_all_users():
+        with sqlite3.connect('testdb.sqlite') as connection:
+            cursor = connection.cursor()
+            select_users = "SELECT * FROM users"
+            cursor.execute(select_users)
+            users = cursor.fetchall()
+        print(users)
+        return users
+
+
+    def last_song(self):
+        with sqlite3.connect('testdb.sqlite') as connection:
+            cursor = connection.cursor()
+            get_last_song_query = """
+                        SELECT song, artist
+                        FROM played
+                        WHERE user_id = ?
+                        ORDER BY created_at DESC
+                        LIMIT 1;
+                        """
+            cursor.execute(get_last_song_query, (self.user_id,))
+            last_song_result = cursor.fetchone()
+        return last_song_result
+    @staticmethod
+    def get_user_from_db(id):
+        with sqlite3.connect('testdb.sqlite') as connection:
+            cursor = connection.cursor()
+            select_user = """
+                    SELECT *
+                    FROM users
+                    WHERE id = ?
+                    LIMIT 1;
+                    """
+            cursor.execute(select_user, (id,))
+            user = cursor.fetchone()
+        return user
+
+
+def app():
+    if len(sys.argv) == 4:
+        username = sys.argv[1]
+        lastfm = sys.argv[2]
+        chat_id = sys.argv[3]
+        user = User(username, lastfm, chat_id)
+        user.write_db_user()
+        return
+    main_loop()
+
+
 def send_message(name, artist, chat_id):
     # Ваш токен бота
     TOKEN = config['token']
@@ -21,47 +85,25 @@ def send_message(name, artist, chat_id):
         print('Ошибка отправки сообщения:', response.text)
 
 
-def write_db_user(username, lastfm, chatid):
-    print('write db user')
-    with sqlite3.connect('testdb.sqlite') as connection:
-        cursor = connection.cursor()
-        cursor.execute('INSERT INTO users (username, lastfm, chat_id) VALUES (?, ?, ?)', (username, lastfm, chatid))
-        connection.commit()
-    return
-
-
 def process(user):
     print(user)
-    lastfmapi = LastFMApi(user[2])
+    lastfmapi = LastFMApi(user.lastfm)
     song_dict = lastfmapi.check_for_new_song()
     print(song_dict)
     song = song_dict['name']
     artist = song_dict['artist']
-    last_song = user_last_song(user[0])
-    chat_id = user[3]
+    last_song = user.last_song()
+    chat_id = user.chat_id
     if (song, artist) != last_song and song_dict['nowplaying']:
         write_song(user, song, artist)
         send_message(song, artist, chat_id)
 
 
-def user_last_song(user_id):
-    connection = sqlite3.connect('testdb.sqlite')
-    cursor = connection.cursor()
-    get_last_song_query = """
-        SELECT song, artist
-        FROM played
-        WHERE user_id = ?
-        ORDER BY created_at DESC
-        LIMIT 1;
-        """
-    cursor.execute(get_last_song_query, (user_id,))
-    last_song_result = cursor.fetchone()
-    connection.close()
-    return last_song_result
+
 
 
 def write_song(user, song, artist):
-    user_id = user[0]
+    user_id = user.chat_id
     with sqlite3.connect('testdb.sqlite') as connection:
         cursor = connection.cursor()
         created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -72,24 +114,13 @@ def write_song(user, song, artist):
 
 
 def main_loop():
-    print('main loop')
-    conn = sqlite3.connect('testdb.sqlite')
-    cursor = conn.cursor()
-    query = "SELECT * FROM users"
-    cursor.execute(query)
-    users = cursor.fetchall()
+    users = User.get_all_users()
     for user in users:
-        process(user)
+        normal_user = User(user[1], user[2], user[3])
+        process(normal_user)
 
 
-def app():
-    if len(sys.argv) == 4:
-        username = sys.argv[1]
-        lastfm = sys.argv[2]
-        chat_id = sys.argv[3]
-        write_db_user(username, lastfm, chat_id)
-        return
-    main_loop()
+
 
 
 if __name__ == "__main__":
