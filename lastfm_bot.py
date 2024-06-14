@@ -1,7 +1,7 @@
 import requests
 import sqlite3
 import sys
-from lastfm import check_for_new_song
+from lastfm import LastFMApi
 from config import config
 from datetime import datetime
 
@@ -32,7 +32,8 @@ def write_db_user(username, lastfm, chatid):
 
 def process(user):
     print(user)
-    song_dict = check_for_new_song(user[2])
+    lastfmapi = LastFMApi(user[2])
+    song_dict = lastfmapi.check_for_new_song()
     print(song_dict)
     song = song_dict['name']
     artist = song_dict['artist']
