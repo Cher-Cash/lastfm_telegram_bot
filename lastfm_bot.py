@@ -1,29 +1,15 @@
 import requests
-import os
+import sqlite3
+import sys
 from lastfm import check_for_new_song
 from config import config
+from datetime import datetime
 
 
-def safe_result(result_of_request):
-    with open('temp.txt', 'w') as file:
-        file.write(result_of_request)
-
-
-def check_file(result_of_request):
-    if not os.path.isfile('temp.txt'):
-        file = open('temp.txt', 'w')
-        file.close()
-    with open('temp.txt', 'r') as file:
-        if result_of_request != file.read():
-            return True
-    return False
-
-
-def send_message(name, artist):
+def send_message(name, artist, chat_id):
     # Ваш токен бота
     TOKEN = config['token']
     url = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
-    chat_id = config['chat_id']
     params = {
         'chat_id': chat_id,
         'text': f'{name} - {artist}'
@@ -35,13 +21,74 @@ def send_message(name, artist):
         print('Ошибка отправки сообщения:', response.text)
 
 
+def write_db_user(username, lastfm, chatid):
+    print('write db user')
+    with sqlite3.connect('testdb.sqlite') as connection:
+        cursor = connection.cursor()
+        cursor.execute('INSERT INTO users (username, lastfm, chat_id) VALUES (?, ?, ?)', (username, lastfm, chatid))
+        connection.commit()
+    return
+
+
+def process(user):
+    print(user)
+    song_dict = check_for_new_song(user[2])
+    print(song_dict)
+    song = song_dict['name']
+    artist = song_dict['artist']
+    last_song = user_last_song(user[0])
+    chat_id = user[3]
+    if (song, artist) != last_song and song_dict['nowplaying']:
+        write_song(user, song, artist)
+        send_message(song, artist, chat_id)
+
+
+def user_last_song(user_id):
+    connection = sqlite3.connect('testdb.sqlite')
+    cursor = connection.cursor()
+    get_last_song_query = """
+        SELECT song, artist
+        FROM played
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT 1;
+        """
+    cursor.execute(get_last_song_query, (user_id,))
+    last_song_result = cursor.fetchone()
+    connection.close()
+    return last_song_result
+
+
+def write_song(user, song, artist):
+    user_id = user[0]
+    with sqlite3.connect('testdb.sqlite') as connection:
+        cursor = connection.cursor()
+        created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        insert_query = "INSERT INTO played (song, artist, user_id, created_at) VALUES (?, ?, ?, ?)"
+        cursor.execute(insert_query, (song, artist, user_id, created_at))
+        connection.commit()
+    return
+
+
+def main_loop():
+    print('main loop')
+    conn = sqlite3.connect('testdb.sqlite')
+    cursor = conn.cursor()
+    query = "SELECT * FROM users"
+    cursor.execute(query)
+    users = cursor.fetchall()
+    for user in users:
+        process(user)
+
+
 def app():
-    data = check_for_new_song("gunlinux", "460cda35be2fbf4f28e8ea7a38580730")
-    data_line = data['name'] + data['artist']
-    if check_file(data_line):
-        safe_result(data_line)
-        send_message(data['name'], data['artist'])
+    if len(sys.argv) == 4:
+        username = sys.argv[1]
+        lastfm = sys.argv[2]
+        chat_id = sys.argv[3]
+        write_db_user(username, lastfm, chat_id)
         return
+    main_loop()
 
 
 if __name__ == "__main__":
