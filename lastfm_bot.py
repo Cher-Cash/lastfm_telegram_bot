@@ -9,19 +9,18 @@ from datetime import datetime
 class User:
     def __init__(self, user, lastfm, chat_id, user_id=None):
         self.user = user
-        self.lastfm = lastfm
         self.chat_id = chat_id
         self.user_id = user_id
-        self.lastfmapi = LastFMApi(self.lastfm)
-
+        self.lastfmapi = LastFMApi(lastfm)
 
     def write_db_user(self):
         with sqlite3.connect('testdb.sqlite') as connection:
             cursor = connection.cursor()
-            cursor.execute('INSERT INTO users (username, lastfm, chat_id) VALUES (?, ?, ?)', (self.user, self.lastfm, self.chat_id))
+            cursor.execute('INSERT INTO users (username, lastfm, chat_id) VALUES (?, ?, ?)',
+                           (self.user, self.lastfmapi.userName, self.chat_id)
+                           )
             connection.commit()
         return
-
 
     def last_song(self):
         with sqlite3.connect('testdb.sqlite') as connection:
@@ -37,9 +36,8 @@ class User:
             last_song_result = cursor.fetchone()
         return last_song_result
 
-
     def process(self):
-        print('name',self.lastfm)
+        print('name', self.lastfmapi.userName)
         song_dict = self.lastfmapi.check_for_new_song()
         print('song from lastfm', song_dict)
         song = song_dict['name']
@@ -50,7 +48,6 @@ class User:
         if (song, artist) != last_song and song_dict['nowplaying']:
             write_song(self.user_id, song, artist)
             User.send_message(self, song, artist)
-
 
     def send_message(self, *args):
         # Ваш токен бота
@@ -66,7 +63,6 @@ class User:
         else:
             print('Ошибка отправки сообщения:', response.text)
 
-
     @staticmethod
     def get_user_from_db(id):
         with sqlite3.connect('testdb.sqlite') as connection:
@@ -80,7 +76,6 @@ class User:
             cursor.execute(select_user, (id,))
             user = cursor.fetchone()
         return user
-
 
     @staticmethod
     def get_all_users():
