@@ -37,17 +37,6 @@ class User:
         return last_song_result
 
 
-    @staticmethod
-    def get_all_users():
-        with sqlite3.connect('testdb.sqlite') as connection:
-            cursor = connection.cursor()
-            select_users = "SELECT * FROM users"
-            cursor.execute(select_users)
-            users = cursor.fetchall()
-        print(users)
-        return users
-
-
     def process(self):
         print('name',self.lastfm)
         lastfmapi = LastFMApi(self.lastfm)
@@ -60,7 +49,22 @@ class User:
         chat_id = self.chat_id
         if (song, artist) != last_song and song_dict['nowplaying']:
             write_song(self.user_id, song, artist)
-            send_message(song, artist, chat_id)
+            User.send_message(self, song, artist)
+
+
+    def send_message(self, *args):
+        # Ваш токен бота
+        TOKEN = config['token']
+        url = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
+        params = {
+            'chat_id': self.chat_id,
+            'text': f'{args[0]} - {args[1]}'
+        }
+        response = requests.post(url, data=params)
+        if response.status_code == 200:
+            print(f'{args[0]} - {args[1]}')
+        else:
+            print('Ошибка отправки сообщения:', response.text)
 
 
     @staticmethod
@@ -78,6 +82,17 @@ class User:
         return user
 
 
+    @staticmethod
+    def get_all_users():
+        with sqlite3.connect('testdb.sqlite') as connection:
+            cursor = connection.cursor()
+            select_users = "SELECT * FROM users"
+            cursor.execute(select_users)
+            users = cursor.fetchall()
+        print(users)
+        return users
+
+
 def app():
     if len(sys.argv) == 4:
         username = sys.argv[1]
@@ -87,21 +102,6 @@ def app():
         user.write_db_user()
         return
     main_loop()
-
-
-def send_message(name, artist, chat_id):
-    # Ваш токен бота
-    TOKEN = config['token']
-    url = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
-    params = {
-        'chat_id': chat_id,
-        'text': f'{name} - {artist}'
-    }
-    response = requests.post(url, data=params)
-    if response.status_code == 200:
-        print(f'{name} - {artist}')
-    else:
-        print('Ошибка отправки сообщения:', response.text)
 
 
 def write_song(user_id, song, artist):
