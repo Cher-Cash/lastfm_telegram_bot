@@ -48,18 +48,18 @@ class User:
         return users
 
 
-    @staticmethod
-    def process(user):
-        print(user)
-        lastfmapi = LastFMApi(user.lastfm)
+    def process(self):
+        print('name',self.lastfm)
+        lastfmapi = LastFMApi(self.lastfm)
         song_dict = lastfmapi.check_for_new_song()
-        print(song_dict)
+        print('song from lastfm', song_dict)
         song = song_dict['name']
         artist = song_dict['artist']
-        last_song = user.last_song()
-        chat_id = user.chat_id
+        last_song = self.last_song()
+        print('last_song', last_song)
+        chat_id = self.chat_id
         if (song, artist) != last_song and song_dict['nowplaying']:
-            write_song(user, song, artist)
+            write_song(self.user_id, song, artist)
             send_message(song, artist, chat_id)
 
 
@@ -104,8 +104,7 @@ def send_message(name, artist, chat_id):
         print('Ошибка отправки сообщения:', response.text)
 
 
-def write_song(user, song, artist):
-    user_id = user.chat_id
+def write_song(user_id, song, artist):
     with sqlite3.connect('testdb.sqlite') as connection:
         cursor = connection.cursor()
         created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -118,8 +117,9 @@ def write_song(user, song, artist):
 def main_loop():
     users = User.get_all_users()
     for user in users:
-        normal_user = User(user[1], user[2], user[3])
+        normal_user = User(user[1], user[2], user[3], user[0])
         User.process(normal_user)
+    return
 
 
 if __name__ == "__main__":
