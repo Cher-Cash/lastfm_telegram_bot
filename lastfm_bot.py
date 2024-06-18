@@ -13,22 +13,13 @@ class User:
         self.chat_id = chat_id
         self.user_id = user_id
 
+
     def write_db_user(self):
         with sqlite3.connect('testdb.sqlite') as connection:
             cursor = connection.cursor()
             cursor.execute('INSERT INTO users (username, lastfm, chat_id) VALUES (?, ?, ?)', (self.user, self.lastfm, self.chat_id))
             connection.commit()
         return
-
-    @staticmethod
-    def get_all_users():
-        with sqlite3.connect('testdb.sqlite') as connection:
-            cursor = connection.cursor()
-            select_users = "SELECT * FROM users"
-            cursor.execute(select_users)
-            users = cursor.fetchall()
-        print(users)
-        return users
 
 
     def last_song(self):
@@ -44,6 +35,34 @@ class User:
             cursor.execute(get_last_song_query, (self.user_id,))
             last_song_result = cursor.fetchone()
         return last_song_result
+
+
+    @staticmethod
+    def get_all_users():
+        with sqlite3.connect('testdb.sqlite') as connection:
+            cursor = connection.cursor()
+            select_users = "SELECT * FROM users"
+            cursor.execute(select_users)
+            users = cursor.fetchall()
+        print(users)
+        return users
+
+
+    @staticmethod
+    def process(user):
+        print(user)
+        lastfmapi = LastFMApi(user.lastfm)
+        song_dict = lastfmapi.check_for_new_song()
+        print(song_dict)
+        song = song_dict['name']
+        artist = song_dict['artist']
+        last_song = user.last_song()
+        chat_id = user.chat_id
+        if (song, artist) != last_song and song_dict['nowplaying']:
+            write_song(user, song, artist)
+            send_message(song, artist, chat_id)
+
+
     @staticmethod
     def get_user_from_db(id):
         with sqlite3.connect('testdb.sqlite') as connection:
@@ -85,23 +104,6 @@ def send_message(name, artist, chat_id):
         print('Ошибка отправки сообщения:', response.text)
 
 
-def process(user):
-    print(user)
-    lastfmapi = LastFMApi(user.lastfm)
-    song_dict = lastfmapi.check_for_new_song()
-    print(song_dict)
-    song = song_dict['name']
-    artist = song_dict['artist']
-    last_song = user.last_song()
-    chat_id = user.chat_id
-    if (song, artist) != last_song and song_dict['nowplaying']:
-        write_song(user, song, artist)
-        send_message(song, artist, chat_id)
-
-
-
-
-
 def write_song(user, song, artist):
     user_id = user.chat_id
     with sqlite3.connect('testdb.sqlite') as connection:
@@ -117,10 +119,7 @@ def main_loop():
     users = User.get_all_users()
     for user in users:
         normal_user = User(user[1], user[2], user[3])
-        process(normal_user)
-
-
-
+        User.process(normal_user)
 
 
 if __name__ == "__main__":
