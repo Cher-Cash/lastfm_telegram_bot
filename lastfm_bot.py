@@ -12,6 +12,7 @@ class User:
         self.lastfm = lastfm
         self.chat_id = chat_id
         self.user_id = user_id
+        self.lastfmapi = LastFMApi(self.lastfm)
 
 
     def write_db_user(self):
@@ -39,8 +40,7 @@ class User:
 
     def process(self):
         print('name',self.lastfm)
-        lastfmapi = LastFMApi(self.lastfm)
-        song_dict = lastfmapi.check_for_new_song()
+        song_dict = self.lastfmapi.check_for_new_song()
         print('song from lastfm', song_dict)
         song = song_dict['name']
         artist = song_dict['artist']
@@ -89,7 +89,6 @@ class User:
             select_users = "SELECT * FROM users"
             cursor.execute(select_users)
             users = cursor.fetchall()
-        print(users)
         return users
 
 
