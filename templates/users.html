@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Users template{% endblock %}</title>
+</head>
+<body>
+    <header>
+        <h1>User list</h1>
+    </header>
+    <main>
+        <ul>
+            <table>
+                <thead>
+                <tr>
+                    <th>User_id</th>
+                    <th>Username</th>
+                    <th>LastFm</th>
+                    <th>Chat_id</th>
+                </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td>{{ user[0] }}</td>
+                            <td>{{ user[1] }}</td>
+                            <td>{{ user[2] }}</td>
+                            <td>{{ user[3] }}</td>
+                        </tr>
+                    {% endfor %}
+
+                </tbody>
+            </table>
+        </ul>
+    </main>
+<article>
+  <ul>
+  {% for user in users %}
+  <tr>
+    <li><a href="/user/{{ user[0] }}">{{ user[1] }}</a></li>
+  </tr>
+  {% endfor %}
+  </ul>
+</article>
+</body>
+</html>

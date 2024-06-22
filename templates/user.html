@@ -1,0 +1,11 @@
+<h1>user template {{ user[1] }}</h1>
+
+<ul>
+    {% for song in songs %}
+    <tr>
+        <li>
+            <a>{{ song[1],song[2] }}</a>
+        </li>
+    </tr>
+    {% endfor %}
+</ul>
