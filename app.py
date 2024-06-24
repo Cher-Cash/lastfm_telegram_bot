@@ -15,15 +15,7 @@ def user_index():
 @app.route("/user/<int:user_id>")
 def user_view(user_id):
     user = User.get_user_from_db(user_id)
-    with sqlite3.connect('testdb.sqlite') as connection:
-        cursor = connection.cursor()
-        get_all_song = """
-                    SELECT * 
-                    FROM played
-                    WHERE user_id = ?;
-                    """
-        cursor.execute(get_all_song, (user_id,))
-        all_songs = cursor.fetchall()
+    all_songs = User.get_all_song(user_id)
     return render_template('user.html', user=user, songs=all_songs)
 
 

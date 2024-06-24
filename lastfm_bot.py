@@ -22,6 +22,19 @@ class User:
             connection.commit()
         return
 
+    @staticmethod
+    def get_all_song(id):
+        with sqlite3.connect('testdb.sqlite') as connection:
+            cursor = connection.cursor()
+            get_all = """
+                        SELECT * 
+                        FROM played
+                        WHERE user_id = ?;
+                        """
+            cursor.execute(get_all, (id,))
+            all_songs = cursor.fetchall()
+        return all_songs
+
     def last_song(self):
         with sqlite3.connect('testdb.sqlite') as connection:
             cursor = connection.cursor()
