@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, abort
 from lastfm_bot import User
 
 
@@ -14,6 +14,8 @@ def user_index():
 @app.route("/user/<int:user_id>")
 def user_view(user_id):
     user = User.get_user_from_db(user_id)
+    if user is None:
+        abort(404)
     all_songs = User.get_all_song(user_id)
     return render_template('user.html', user=user, songs=all_songs)
 
