@@ -14,7 +14,7 @@ class User:
         self.lastfmapi = LastFMApi(lastfm)
 
     def write_db_user(self):
-        with sqlite3.connect('testdb.sqlite') as connection:
+        with sqlite3.connect(config['database']) as connection:
             cursor = connection.cursor()
             cursor.execute('INSERT INTO users (username, lastfm, chat_id) VALUES (?, ?, ?)',
                            (self.user, self.lastfmapi.userName, self.chat_id)
@@ -22,21 +22,8 @@ class User:
             connection.commit()
         return
 
-    @staticmethod
-    def get_all_song(id):
-        with sqlite3.connect('testdb.sqlite') as connection:
-            cursor = connection.cursor()
-            get_all = """
-                        SELECT * 
-                        FROM played
-                        WHERE user_id = ?;
-                        """
-            cursor.execute(get_all, (id,))
-            all_songs = cursor.fetchall()
-        return all_songs
-
     def last_song(self):
-        with sqlite3.connect('testdb.sqlite') as connection:
+        with sqlite3.connect(config['database']) as connection:
             cursor = connection.cursor()
             get_last_song_query = """
                         SELECT song, artist
@@ -57,7 +44,6 @@ class User:
         artist = song_dict['artist']
         last_song = self.last_song()
         print('last_song', last_song)
-        chat_id = self.chat_id
         if (song, artist) != last_song and song_dict['nowplaying']:
             write_song(self.user_id, song, artist)
             User.send_message(self, song, artist)
@@ -78,7 +64,7 @@ class User:
 
     @staticmethod
     def get_user_from_db(id):
-        with sqlite3.connect('testdb.sqlite') as connection:
+        with sqlite3.connect(config['database']) as connection:
             cursor = connection.cursor()
             select_user = """
                     SELECT *
@@ -92,12 +78,25 @@ class User:
 
     @staticmethod
     def get_all_users():
-        with sqlite3.connect('testdb.sqlite') as connection:
+        with sqlite3.connect(config['database']) as connection:
             cursor = connection.cursor()
             select_users = "SELECT * FROM users"
             cursor.execute(select_users)
             users = cursor.fetchall()
         return users
+
+    @staticmethod
+    def get_all_song(user_id):
+        with sqlite3.connect(config['database']) as connection:
+            cursor = connection.cursor()
+            get_all = """
+                        SELECT *
+                        FROM played
+                        WHERE user_id = ?;
+                        """
+            cursor.execute(get_all, (user_id,))
+            all_songs = cursor.fetchall()
+        return all_songs
 
 
 def app():
@@ -112,7 +111,7 @@ def app():
 
 
 def write_song(user_id, song, artist):
-    with sqlite3.connect('testdb.sqlite') as connection:
+    with sqlite3.connect(config['database']) as connection:
         cursor = connection.cursor()
         created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         insert_query = "INSERT INTO played (song, artist, user_id, created_at) VALUES (?, ?, ?, ?)"

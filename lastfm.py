@@ -3,19 +3,16 @@ import requests
 
 class LastFMApi:
 
-
     def __init__(self, userName, api_key="460cda35be2fbf4f28e8ea7a38580730"):
         self.userName = userName
         self.__api_key = api_key
         self.__base_url = "http://ws.audioscrobbler.com/2.0/"
-
 
     def check_for_new_song(self):
         current_track_data = self.__get_song_from_api()
         if not current_track_data:
             return {"error": "sometign went wrong"}
         return self.__process_json(current_track_data)
-
 
     def __get_song_from_api(self):
         # Параметры запроса
@@ -32,7 +29,6 @@ class LastFMApi:
         if response.status_code != 200:
             return None
         return response.json()
-
 
     def __process_json(self, document):
         current_track = document["recenttracks"]["track"][0]

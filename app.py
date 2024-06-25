@@ -1,6 +1,5 @@
 from flask import Flask, render_template
 from lastfm_bot import User
-import sqlite3
 
 
 app = Flask(__name__)
