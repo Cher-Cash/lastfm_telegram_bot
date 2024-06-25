@@ -3,14 +3,15 @@
 <header>
     <a href="/">Вернуться на главную</a>
     <p></p>
-    <a href="/user/song_list/{{ user[0] }}">Список без дублей</a>
+    <a href="/user/{{ user[0] }}">Назад</a>
+
 </header>
 </body>
 <ul>
     {% for song in songs %}
     <tr>
         <li>
-            <a>{{ song[1],song[2] }}</a>
+            <a>{{ song[0],song[1] }}</a>
         </li>
     </tr>
     {% endfor %}

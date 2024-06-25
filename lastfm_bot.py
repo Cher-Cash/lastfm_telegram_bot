@@ -98,6 +98,20 @@ class User:
             all_songs = cursor.fetchall()
         return all_songs
 
+    @staticmethod
+    def get_non_repeat_list(user_id):
+        with sqlite3.connect(config['database']) as connection:
+            cursor = connection.cursor()
+            get_all = """
+                        SELECT song, artist
+                        FROM played
+                        WHERE user_id = ?;
+                        """
+            cursor.execute(get_all, (user_id,))
+            all_songs = cursor.fetchall()
+        non_repeat = set(all_songs)
+        return non_repeat
+
 
 def app():
     if len(sys.argv) == 4:

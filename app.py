@@ -20,5 +20,16 @@ def user_view(user_id):
     return render_template('user.html', user=user, songs=all_songs)
 
 
+@app.route("/user/song_list/<int:user_id>")
+def view_non_repetitive_list(user_id):
+    user = User.get_user_from_db(user_id)
+    if user is None:
+        abort(404)
+    song_list = User.get_non_repeat_list(user_id)
+    return render_template('non_repetitive_list.html',
+                           user=user, songs=song_list
+                           )
+
+
 if __name__ == "__main__":
     app.run()
